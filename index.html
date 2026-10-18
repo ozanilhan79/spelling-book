@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Spelling">
+<meta name="theme-color" content="#F5F9FD">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; font: 14px system-ui, sans-serif; overscroll-behavior: none; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<title>Rana's Spelling Book</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Lexend:wght@400;600;800&display=swap">
+<style>
+/* Layout: one exercise-book page. Home = word shelf; Practice = Look → Cover → Write → Check on lined paper. */
+:root {
+  --paper: #F5F9FD;
+  --card: #FFFFFF;
+  --ink: #1B2A4A;
+  --muted: #5B6B88;
+  --rule: #C3D7EE;
+  --margin: #E7A3AE;
+  --hi: #FFE45C;
+  --hi-ink: #1B2A4A;
+  --accent: #2F5BD3;
+  --accent-ink: #FFFFFF;
+  --ok: #23905A;
+  --miss: #D23C4A;
+  --shadow: 0 2px 0 rgba(27,42,74,.10);
+  --f-word: "Andika", "Comic Neue", "Trebuchet MS", system-ui, sans-serif;
+  --f-ui: "Lexend", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #111A2B; --card: #19243A; --ink: #E7EEF9; --muted: #9AAAC6; --rule: #2B3D5E;
+  --margin: #7B3E4B; --hi: #EAC93A; --hi-ink: #1B2A4A; --accent: #7EA2FF; --accent-ink: #0E1628;
+  --ok: #5CCB8A; --miss: #FF7C86; --shadow: 0 2px 0 rgba(0,0,0,.35); color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --paper: #111A2B; --card: #19243A; --ink: #E7EEF9; --muted: #9AAAC6; --rule: #2B3D5E;
+  --margin: #7B3E4B; --hi: #EAC93A; --hi-ink: #1B2A4A; --accent: #7EA2FF; --accent-ink: #0E1628;
+  --ok: #5CCB8A; --miss: #FF7C86; --shadow: 0 2px 0 rgba(0,0,0,.35); color-scheme: dark; }
+
+html, body { height: 100%; }
+body {
+  background: var(--paper); color: var(--ink); font-family: var(--f-ui); font-size: 17px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+}
+.wrap { max-width: 860px; margin: 0 auto; padding-block: 20px 40px; display: flex; flex-direction: column; gap: 20px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+h1 { font-family: var(--f-word); font-size: clamp(28px, 5vw, 40px); margin: 0; text-wrap: balance; }
+h1 span { background: var(--hi); color: var(--hi-ink); border-radius: 8px; padding: 0 2px; }
+.sub { color: var(--muted); font-size: 15px; margin: 4px 0 0; }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+button:focus-visible, textarea:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; padding: 0 22px;
+  border-radius: 14px; font-weight: 600; background: var(--card); border: 2px solid var(--rule); box-shadow: var(--shadow); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.big { min-height: 68px; font-size: 22px; padding: 0 34px; border-radius: 18px; }
+.btn.ok { background: var(--ok); border-color: var(--ok); color: var(--card); }
+.btn.no { border-color: var(--miss); color: var(--miss); }
+.btn:disabled { opacity: .45; cursor: default; }
+.link { color: var(--muted); font-size: 14px; text-decoration: underline; text-underline-offset: 3px; padding: 6px; }
+.row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.row.center { justify-content: center; }
+svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* the exercise-book page */
+.page { position: relative; background: var(--card); border-radius: 6px 18px 18px 6px; box-shadow: var(--shadow);
+  border: 1px solid var(--rule); padding: 22px 22px 22px 46px; min-width: 0; }
+.page::before { content: ""; position: absolute; left: 30px; top: 0; bottom: 0; width: 2px; background: var(--margin); }
+
+/* shelf */
+.shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.chip { background: var(--paper); border: 2px solid var(--rule); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.chip .w { font-family: var(--f-word); font-size: 24px; line-height: 1.1; overflow-wrap: anywhere; }
+.dots { display: flex; gap: 6px; }
+.dots i { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--rule); }
+.dots i.on { background: var(--ok); border-color: var(--ok); }
+.chip.done { border-color: var(--ok); }
+.legend { color: var(--muted); font-size: 14px; }
+
+/* practice */
+.steps { display: flex; gap: 6px; flex-wrap: wrap; }
+.steps b { font-weight: 600; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; padding: 6px 10px; border-radius: 999px; color: var(--muted); border: 1.5px solid var(--rule); }
+.steps b.on { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.progress { display: flex; gap: 5px; flex-wrap: wrap; }
+.progress i { width: 22px; height: 8px; border-radius: 4px; background: var(--rule); }
+.progress i.ok { background: var(--ok); }
+.progress i.no { background: var(--miss); }
+.progress i.now { background: var(--accent); }
+
+.stage { position: relative; min-height: 190px; display: grid; place-items: center; padding: 18px 0; overflow: hidden; }
+.word { position: relative; font-family: var(--f-word); font-size: clamp(54px, 13vw, 112px); line-height: 1.15; letter-spacing: .04em; white-space: nowrap; padding: 6px 18px; }
+.word .L { display: inline-block; position: relative; }
+.word .tricky { background: var(--hi); color: var(--hi-ink); border-radius: 10px; padding: 0 2px; }
+.word .silent { opacity: .45; font-size: .82em; }
+.word .silent::after { content: "shh"; position: absolute; top: -.55em; left: 50%; transform: translateX(-50%); font: 600 13px var(--f-ui); color: var(--muted); letter-spacing: .06em; }
+.word .gap { display: inline-block; width: .35em; }
+.word.small { font-size: clamp(40px, 9vw, 76px); }
+.hint { font-size: 20px; text-align: center; max-width: 34ch; margin: 0 auto; text-wrap: balance; }
+.secret { font-family: var(--f-word); font-size: 22px; color: var(--muted); text-align: center; }
+.secret strong { color: var(--ink); letter-spacing: .06em; }
+
+/* word pictures */
+.fx-wheels { isolation: isolate; }
+.fx-wheels .tricky { background: none; position: relative; }
+.fx-wheels .tricky::before { content: ""; position: absolute; z-index: -1; left: 50%; bottom: .12em; width: .7em; height: .7em; margin-left: -.35em; box-sizing: border-box; border-radius: 50%; background: var(--hi); border: .07em solid var(--ink); border-top-color: var(--accent); animation: spin 1.6s linear infinite; }
+.fx-wheels::after { content: ""; position: absolute; left: 12%; right: 14%; bottom: .08em; height: 6px; border-radius: 3px; background: var(--ink); }
+.fx-tall .tricky { animation: grow 1.6s ease-in-out infinite; transform-origin: bottom; }
+.fx-magic .tricky:last-child { animation: sparkle 1.2s ease-in-out infinite; }
+.over { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.over * { fill: none; stroke: var(--accent); stroke-width: 4; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-dasharray: 3000; stroke-dashoffset: 3000; animation: draw 1.6s .2s ease-out forwards; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes grow { 50% { transform: scaleY(1.22); } }
+@keyframes sparkle { 50% { transform: translateY(-.12em) rotate(-8deg); } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+.curtain { position: absolute; inset: 0; background: var(--accent); background: repeating-linear-gradient(135deg, var(--accent) 0 18px, color-mix(in srgb, var(--accent) 82%, var(--card)) 18px 36px);
+  transform: translateY(-101%); transition: transform .55s cubic-bezier(.6,.05,.3,1); display: grid; place-items: center; color: var(--accent-ink); font: 800 26px var(--f-ui); letter-spacing: .04em; border-radius: 12px; }
+.curtain.down { transform: translateY(0); }
+
+/* writing pad: four-line handwriting guide */
+.pad { position: relative; height: 240px; border-radius: 12px; border: 2px dashed var(--rule); touch-action: none; overflow: hidden;
+  background:
+    linear-gradient(var(--rule), var(--rule)) 0 25% / 100% 2px no-repeat,
+    repeating-linear-gradient(90deg, var(--rule) 0 10px, transparent 10px 18px) 0 45% / 100% 2px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) 0 70% / 100% 2px no-repeat,
+    linear-gradient(var(--rule), var(--rule)) 0 90% / 100% 2px no-repeat,
+    var(--paper); }
+.pad canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+.pad .ph { position: absolute; left: 16px; top: 10px; color: var(--muted); font-size: 14px; pointer-events: none; }
+
+.verdict { text-align: center; font: 800 28px var(--f-ui); }
+.verdict.ok { color: var(--ok); }
+.verdict.no { color: var(--miss); }
+.diff { font-family: var(--f-word); font-size: clamp(36px, 8vw, 60px); letter-spacing: .06em; text-align: center; overflow-wrap: anywhere; }
+.diff .g { color: var(--ok); }
+.diff .r { color: var(--miss); text-decoration: underline wavy; text-underline-offset: 8px; }
+.diff .m { color: var(--miss); border-bottom: 4px solid var(--miss); }
+.read { color: var(--muted); text-align: center; font-size: 15px; }
+.read b { font-family: var(--f-word); color: var(--ink); font-size: 20px; letter-spacing: .05em; }
+.stars { font: 800 20px var(--f-ui); text-align: center; color: var(--muted); }
+
+/* parent panel */
+.panel { display: flex; flex-direction: column; gap: 16px; }
+.panel h2 { font-size: 20px; margin: 0; }
+.panel h3 { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+textarea, select, input[type=text] { font: 18px var(--f-word); color: var(--ink); background: var(--paper); border: 2px solid var(--rule); border-radius: 12px; padding: 10px 12px; width: 100%; -webkit-user-select: text; user-select: text; }
+textarea { min-height: 220px; resize: vertical; }
+.note { color: var(--muted); font-size: 14px; line-height: 1.5; max-width: 65ch; }
+.status { font-size: 15px; min-height: 1.4em; }
+.tbl { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+td.w { font-family: var(--f-word); font-size: 18px; }
+td.bad { color: var(--miss); font-family: var(--f-word); }
+.confirm { background: var(--paper); border: 2px solid var(--miss); border-radius: 12px; padding: 12px; }
+
+@media (max-width: 520px) {
+  .page { padding: 16px 14px 16px 34px; }
+  .page::before { left: 20px; }
+  .pad { height: 200px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .over * { stroke-dashoffset: 0; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1><span>Rana's</span> Spelling Book</h1>
+      <p class="sub" id="sub"></p>
+    </div>
+    <div class="row"><button class="btn" id="fs" type="button" hidden>Full screen</button><button class="link" id="toParent" type="button">Ebeveyn paneli</button></div>
+  </header>
+
+  <!-- HOME -->
+  <section id="home" class="page">
+    <div class="panel">
+      <h3>This week's words</h3>
+      <div class="shelf" id="shelf"></div>
+      <p class="legend">Each dot = one day you spelled it from memory. Three dots and it's yours.</p>
+      <div class="row"><button class="btn primary big" id="start" type="button">Start practice</button></div>
+    </div>
+  </section>
+
+  <!-- PRACTICE -->
+  <section id="practice" class="page" hidden>
+    <div class="panel">
+      <div class="row" style="justify-content:space-between">
+        <div class="steps" id="steps"><b data-s="look">Look</b><b data-s="cover">Cover</b><b data-s="write">Write</b><b data-s="check">Check</b></div>
+        <button class="link" id="quit" type="button">Stop</button>
+      </div>
+      <div class="progress" id="progress"></div>
+
+      <div class="stage" id="stage">
+        <div id="wordBox"></div>
+        <div class="curtain" id="curtain">Can you remember it?</div>
+      </div>
+
+      <div id="lookUi" class="panel">
+        <p class="hint" id="hint"></p>
+        <p class="secret" id="secret"></p>
+        <div class="row center">
+          <button class="btn" id="hear" type="button"><svg class="i" viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></svg>Hear it</button>
+          <button class="btn" id="spell" type="button">Spell it out</button>
+          <button class="btn" id="secretBtn" type="button">Secret voice</button>
+          <button class="btn primary" id="ready" type="button">I'm ready, cover it</button>
+        </div>
+        <p class="note" id="soundNote" hidden style="text-align:center;margin:0 auto">No sound? Check that the iPad is not on silent and the volume is up.</p>
+      </div>
+
+      <div id="writeUi" class="panel" hidden>
+        <div class="pad" id="pad"><span class="ph" id="ph">Write the word here with your pencil</span><canvas id="cv"></canvas></div>
+        <div class="row center">
+          <button class="btn" id="undo" type="button">Undo</button>
+          <button class="btn" id="clear" type="button">Clear</button>
+          <button class="btn" id="peek" type="button">Peek (2 sec)</button>
+          <button class="btn primary" id="check" type="button">Check</button>
+        </div>
+      </div>
+
+      <div id="checkUi" class="panel" hidden>
+        <div class="verdict" id="verdict"></div>
+        <div class="diff" id="diff"></div>
+        <p class="read" id="read"></p>
+        <div class="row center" id="selfRow" hidden>
+          <button class="btn ok" id="selfOk" type="button">I spelled it right</button>
+          <button class="btn no" id="selfNo" type="button">Not quite</button>
+        </div>
+        <div class="row center">
+          <button class="btn primary big" id="next" type="button" hidden>Next word</button>
+        </div>
+        <p class="row center" style="margin:0"><button class="link" id="override" type="button" hidden>Claude read it wrong? Change the result</button></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- END -->
+  <section id="done" class="page" hidden>
+    <div class="panel" style="align-items:center;text-align:center">
+      <div class="verdict ok" id="doneTitle">All done!</div>
+      <p class="hint" id="doneText"></p>
+      <div class="shelf" id="doneShelf" style="width:100%"></div>
+      <div class="row center"><button class="btn primary big" id="again" type="button">Back to my words</button></div>
+    </div>
+  </section>
+
+  <!-- PARENT -->
+  <section id="parent" class="page" hidden>
+    <div class="panel">
+      <div class="row" style="justify-content:space-between"><h2>Ebeveyn paneli</h2><button class="btn" id="closeParent" type="button">Kapat</button></div>
+
+      <h3>Bu haftanın kelimeleri</h3>
+      <p class="note">Her satıra bir kelime. Yeni liste gelince ya buraya yazın ya da çalışma kâğıdının fotoğrafını yükleyin.</p>
+      <textarea id="wordsTa" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+      <div class="row">
+        <label class="btn" for="photo" id="photoLbl">Kâğıdın fotoğrafından oku</label>
+        <input type="file" id="photo" accept="image/*" hidden>
+        <button class="btn primary" id="saveWords" type="button">Kaydet ve ipuçlarını hazırla</button>
+      </div>
+      <p class="status" id="pStatus"></p>
+
+      <h3>Test günü</h3>
+      <select id="testDay">
+        <option value="1">Pazartesi</option><option value="2">Salı</option><option value="3">Çarşamba</option>
+        <option value="4">Perşembe</option><option value="5">Cuma</option>
+      </select>
+
+      <h3>Ses</h3>
+      <label class="row" style="gap:8px"><input type="checkbox" id="trVoice"> "Secret voice" butonu Türkçe okunuşu sesli okusun</label>
+
+      <h3>Durum</h3>
+      <div class="tbl"><table><thead><tr><th>Kelime</th><th>Gün</th><th>Deneme</th><th>Doğru</th><th>Son yanlış yazımı</th></tr></thead><tbody id="stats"></tbody></table></div>
+
+      <p class="note" id="aiNote"></p>
+      <h3>Tanı bilgisi</h3>
+      <p class="note" id="diagOut" style="-webkit-user-select:text;user-select:text;overflow-wrap:anywhere"></p>
+      <div><button class="btn no" id="reset" type="button">İlerlemeyi sıfırla</button></div>
+      <div class="confirm" id="resetConfirm" hidden>
+        <p style="margin:0 0 10px">Bütün yıldızlar ve geçmiş silinecek. Emin misiniz?</p>
+        <div class="row"><button class="btn no" id="resetYes" type="button">Evet, sıfırla</button><button class="btn" id="resetNo" type="button">Vazgeç</button></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+// Runs first: if anything breaks (even a parse error below), show it on screen so it can be photographed.
+window.__errs = [];
+function __showErr(msg) {
+  window.__errs.push(msg);
+  let box = document.getElementById("errBox");
+  if (!box) {
+    box = document.createElement("div"); box.id = "errBox";
+    box.style.cssText = "position:fixed;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:99;background:#fff3f4;color:#7a1020;border:2px solid #d23c4a;border-radius:12px;padding:10px 12px;font:14px/1.4 system-ui,sans-serif;max-height:40vh;overflow:auto;-webkit-user-select:text;user-select:text";
+    box.innerHTML = "<b>Bir hata oldu. Lütfen bu kutunun ekran görüntüsünü gönderin:</b><div></div>";
+    document.body.appendChild(box);
+  }
+  const line = document.createElement("div"); line.textContent = msg; box.lastChild.appendChild(line);
+}
+window.addEventListener("error", (e) => __showErr((e.message || "error") + (e.lineno ? " (satır " + e.lineno + ")" : "")));
+window.addEventListener("unhandledrejection", (e) => __showErr("promise: " + (e.reason && (e.reason.code || e.reason.message) || e.reason)));
+</script>
+<script>
+/* ---------- data ---------- */
+// mark syntax: [x] tricky part, {x} silent letter, | joins two words
+const DEFAULTS = [
+  { word: "bike",      mark: "b[i]k[e]",      fx: "magic",  tr: "bi-ke",        hint: "Magic e at the end makes the i say its name." },
+  { word: "bat",       mark: "bat",           fx: "",       tr: "bat",          hint: "Easy one! Sound it out: b, a, t." },
+  { word: "scooter",   mark: "sc[oo]ter",     fx: "wheels", tr: "sko-o-ter",    hint: "The two o's are the scooter's wheels." },
+  { word: "ball",      mark: "ba[ll]",        fx: "tall",   tr: "bal-l",        hint: "Two tall l's stand at the end, like two bats." },
+  { word: "favourite", mark: "fav[ou]rit{e}", fx: "",       tr: "fa-vo-u-ri-te", hint: "Oh, yoU are my favourite! O and U go together. Don't forget the quiet e." },
+  { word: "thing",     mark: "[th]i[ng]",     fx: "",       tr: "t-hing",       hint: "t and h hold hands. n and g hold hands." },
+  { word: "are",       mark: "ar{e}",         fx: "",       tr: "a-re",         hint: "The e is silent, but it is still there!" },
+  { word: "circle",    mark: "[c]ir[cle]",    fx: "ring",   tr: "kir-kle",      hint: "Two c's, like two half circles. It ends with c-l-e." },
+  { word: "square",    mark: "s[qu][are]",    fx: "box",    tr: "s-ku-a-re",    hint: "q never goes anywhere without u. Then a-r-e, like the word are." },
+  { word: "underline", mark: "under|line",    fx: "under",  tr: "un-der-li-ne", hint: "Two words glued together: under + line." },
+];
+
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("rana." + k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("rana." + k, JSON.stringify(v)); } catch {} },
+};
+let words = store.get("words", DEFAULTS);
+let progress = store.get("progress", {});
+let settings = store.get("settings", { testDay: 5, trVoice: true });
+
+const $ = (s) => document.querySelector(s);
+const today = () => new Date().toISOString().slice(0, 10);
+const prog = (w) => progress[w] || (progress[w] = { days: [], tries: 0, ok: 0, lastWrong: "" });
+const level = (w) => Math.min(3, prog(w).days.length);
+const saveAll = () => { store.set("words", words); store.set("progress", progress); store.set("settings", settings); };
+
+function parseMark(entry) {
+  const out = []; const m = entry.mark || entry.word; let i = 0;
+  while (i < m.length) {
+    const c = m[i];
+    if (c === "[" || c === "{") {
+      const end = m.indexOf(c === "[" ? "]" : "}", i);
+      out.push({ t: m.slice(i + 1, end), k: c === "[" ? "tricky" : "silent" }); i = end + 1;
+    } else if (c === "|") { out.push({ t: "", k: "gap" }); i++; }
+    else { out.push({ t: c, k: "plain" }); i++; }
+  }
+  const flat = out.map((s) => s.t).join("");
+  return flat === entry.word ? out : [{ t: entry.word, k: "plain" }];
+}
+
+/* ---------- diagnostics (shown in the parent panel) ---------- */
+const diag = { pointers: {}, cancels: 0, canvas: "", claude: "waiting", speech: "waiting" };
+function renderDiag() {
+  const errs = (window.__errs || []).slice(-5);
+  $("#diagOut").textContent = [
+    "Cihaz: " + navigator.userAgent,
+    "Dokunuşlar: " + (JSON.stringify(diag.pointers) || "{}") + ", iptal: " + diag.cancels,
+    "Yazı alanı: " + (diag.canvas || "henüz açılmadı"),
+    "Claude: " + (sample ? "bağlı" : "bağlı değil") + (diag.claude !== "waiting" ? " (" + diag.claude + ")" : ""),
+    "Ses: " + diag.speech + ", sesler: " + voices.length,
+    "Hatalar: " + (errs.length ? errs.join(" | ") : "yok"),
+  ].join("\n");
+  $("#diagOut").style.whiteSpace = "pre-wrap";
+}
+
+/* ---------- Claude (optional) ---------- */
+let sample = null;
+if (window.claude?.use) {
+  window.claude.use("sample").then((s) => { sample = s; diag.claude = s ? "ready" : "unavailable"; renderAiNote(); }).catch((e) => { diag.claude = "use failed"; });
+}
+function renderAiNote() {
+  $("#aiNote").textContent = sample
+    ? "Yazıyı Claude okuyor: Rana'nın el yazısının fotoğrafı gönderiliyor, Claude hedef kelimeyi bilmeden harfleri olduğu gibi yazıyor. İlk kullanımda izin isteyecek. Yanlış okursa sonucu elle değiştirebilirsiniz."
+    : "Claude bağlantısı yok. Kontrol adımında Rana kendi yazısını doğru kelimeyle karşılaştırıp kendisi işaretliyor.";
+}
+
+/* ---------- speech ---------- */
+// iPad Safari swallows speak() when it comes right after cancel(), so only cancel when something is playing.
+let voices = [];
+const loadVoices = () => { try { voices = speechSynthesis.getVoices() || []; } catch {} };
+try { loadVoices(); speechSynthesis.addEventListener("voiceschanged", loadVoices); } catch {}
+function say(text, lang, rate) {
+  const ss = window.speechSynthesis;
+  if (!ss || typeof SpeechSynthesisUtterance === "undefined") { diag.speech = "not supported"; soundNote(); return; }
+  try {
+    if (!voices.length) loadVoices();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang; u.rate = rate || 0.8; u.volume = 1;
+    const want = lang.toLowerCase();
+    const v = voices.find((v) => v.lang.replace("_", "-").toLowerCase() === want) ||
+              voices.find((v) => v.lang.replace("_", "-").toLowerCase().startsWith(want.slice(0, 2)));
+    if (v) u.voice = v;
+    let started = false;
+    u.onstart = () => { started = true; diag.speech = "ok (" + (v ? v.name : "default voice") + ")"; };
+    u.onerror = (e) => { diag.speech = "error: " + (e.error || "unknown"); };
+    if (ss.speaking || ss.pending) { ss.cancel(); setTimeout(() => ss.speak(u), 150); } else ss.speak(u);
+    if (ss.paused) ss.resume();
+    setTimeout(() => { if (!started) { diag.speech = diag.speech === "waiting" ? "no sound started" : diag.speech; soundNote(); } }, 2500);
+  } catch (e) { diag.speech = "error: " + e.message; soundNote(); }
+}
+function soundNote() {
+  const n = $("#soundNote"); if (!n) return;
+  n.hidden = false; clearTimeout(soundNote.t); soundNote.t = setTimeout(() => { n.hidden = true; }, 6000);
+}
+
+/* ---------- views ---------- */
+function show(id) { for (const s of ["home", "practice", "done", "parent"]) $("#" + s).hidden = s !== id; window.scrollTo(0, 0); }
+
+function daysToTest() {
+  const d = new Date().getDay(); let n = (settings.testDay - d + 7) % 7; return n;
+}
+function renderSub() {
+  const n = daysToTest();
+  const when = n === 0 ? "Test is today. You've got this!" : n === 1 ? "Test is tomorrow." : `Test in ${n} days.`;
+  $("#sub").textContent = `${words.length} words this week. ${when}`;
+}
+function chip(w) {
+  const lv = level(w.word);
+  const el = document.createElement("div");
+  el.className = "chip" + (lv >= 3 ? " done" : "");
+  el.innerHTML = `<span class="w"></span><span class="dots">${[0,1,2].map((i) => `<i class="${i < lv ? "on" : ""}"></i>`).join("")}</span>`;
+  el.querySelector(".w").textContent = w.word;
+  return el;
+}
+function renderShelf(target) {
+  const box = $(target); box.replaceChildren(...words.map(chip));
+}
+function renderHome() { renderSub(); renderShelf("#shelf"); show("home"); }
+
+/* ---------- practice round ---------- */
+let queue = [], retries = {}, results = [], cur = null, firstTry = {};
+
+function startRound() {
+  const fresh = words.filter((w) => level(w.word) < 3);
+  const pool = (fresh.length ? fresh : words).slice();
+  pool.sort((a, b) => level(a.word) - level(b.word) || Math.random() - 0.5);
+  queue = pool.map((w) => w.word); retries = {}; results = []; firstTry = {};
+  show("practice"); nextWord();
+}
+
+function renderProgress() {
+  const total = results.length + queue.length + (cur ? 1 : 0);
+  const cells = [];
+  for (const r of results) cells.push(`<i class="${r.ok ? "ok" : "no"}"></i>`);
+  if (cur) cells.push(`<i class="now"></i>`);
+  for (let i = 0; i < queue.length; i++) cells.push("<i></i>");
+  $("#progress").innerHTML = cells.join("");
+  $("#progress").setAttribute("aria-label", `${results.length} of ${total}`);
+}
+function setStep(s) { for (const b of $("#steps").children) b.classList.toggle("on", b.dataset.s === s); }
+
+function wordHtml(entry, small) {
+  const segs = parseMark(entry);
+  const wrap = document.createElement("div");
+  wrap.className = "word" + (small ? " small" : "") + (entry.fx ? " fx-" + entry.fx : "");
+  for (const s of segs) {
+    if (s.k === "gap") { const g = document.createElement("span"); g.className = "gap"; wrap.append(g); continue; }
+    // scooter: each o is its own wheel, so split the tricky part into single letters
+    const pieces = entry.fx === "wheels" && s.k === "tricky" ? s.t.split("") : [s.t];
+    for (const t of pieces) {
+      const sp = document.createElement("span");
+      sp.className = "L" + (s.k === "plain" ? "" : " " + s.k);
+      sp.textContent = t; wrap.append(sp);
+    }
+  }
+  const ov = { ring: '<ellipse cx="50" cy="52" rx="52" ry="52"/>', box: '<rect x="-2" y="-4" width="104" height="110" rx="3"/>', under: '<path d="M3 98 H46 M54 98 H97"/>' }[entry.fx];
+  if (ov) wrap.insertAdjacentHTML("beforeend", `<svg class="over" viewBox="0 0 100 100" preserveAspectRatio="none">${ov}</svg>`);
+  return wrap;
+}
+
+function nextWord() {
+  if (!queue.length) return finish();
+  const nextName = queue.shift();
+  cur = words.find((w) => w.word === nextName);
+  if (!cur) return nextWord();
+  renderProgress(); setStep("look");
+  $("#wordBox").replaceChildren(wordHtml(cur));
+  $("#curtain").classList.remove("down");
+  $("#hint").textContent = cur.hint || "";
+  $("#secret").innerHTML = cur.tr ? `Secret Turkish voice: <strong></strong>` : "";
+  if (cur.tr) $("#secret strong").textContent = cur.tr;
+  $("#secretBtn").hidden = !cur.tr;
+  $("#lookUi").hidden = false; $("#writeUi").hidden = true; $("#checkUi").hidden = true;
+}
+
+$("#hear").onclick = () => say(cur.word, "en-GB", 0.75);
+$("#spell").onclick = () => say(cur.word.split("").join(", "), "en-GB", 0.7);
+$("#secretBtn").onclick = () => { if (settings.trVoice) say(cur.tr.replace(/-/g, " "), "tr-TR", 0.7); $("#secret").animate([{ transform: "scale(1)" }, { transform: "scale(1.12)" }, { transform: "scale(1)" }], 500); };
+$("#ready").onclick = () => {
+  setStep("cover"); $("#curtain").classList.add("down");
+  setTimeout(() => { setStep("write"); $("#lookUi").hidden = true; $("#writeUi").hidden = false; pad.reset(); }, 650);
+};
+$("#peek").onclick = () => {
+  $("#curtain").classList.remove("down"); firstTry[cur.word] = "peeked";
+  setTimeout(() => $("#curtain").classList.add("down"), 2000);
+};
+
+/* ---------- writing pad ---------- */
+const pad = (() => {
+  const cv = $("#cv"), ctx = cv.getContext("2d");
+  let strokes = [], live = null, penSeen = false, dpr = 1;
+  const ink = () => getComputedStyle(document.documentElement).getPropertyValue("--ink").trim() || "#1B2A4A";
+  function size() {
+    const r = cv.getBoundingClientRect(); dpr = window.devicePixelRatio || 1;
+    cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr); if (r.width) diag.canvas = `${Math.round(r.width)}×${Math.round(r.height)} @${dpr}`; redraw();
+  }
+  function seg(c, a, b, color, scale) {
+    c.strokeStyle = color; c.lineCap = "round"; c.lineJoin = "round";
+    c.lineWidth = (2.5 + (b.p ?? 0.5) * 5) * scale;
+    c.beginPath(); c.moveTo(a.x * scale, a.y * scale); c.lineTo(b.x * scale, b.y * scale); c.stroke();
+  }
+  function paint(c, list, color, scale, ox = 0, oy = 0) {
+    for (const s of list) {
+      const pts = s.map((p) => ({ x: p.x - ox, y: p.y - oy, p: p.p }));
+      if (pts.length === 1) seg(c, pts[0], { ...pts[0], x: pts[0].x + 0.1 }, color, scale);
+      for (let i = 1; i < pts.length; i++) seg(c, pts[i - 1], pts[i], color, scale);
+    }
+  }
+  function redraw() { ctx.clearRect(0, 0, cv.width, cv.height); paint(ctx, strokes, ink(), dpr); $("#ph").hidden = strokes.length > 0; }
+  const pt = (e) => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top, p: e.pointerType === "pen" ? e.pressure : 0.5 }; };
+  cv.addEventListener("pointerdown", (e) => {
+    diag.pointers[e.pointerType || "?"] = (diag.pointers[e.pointerType || "?"] || 0) + 1;
+    if (e.pointerType === "pen") penSeen = true;
+    if (penSeen && e.pointerType === "touch") return; // palm rejection once the Pencil is in use
+    e.preventDefault(); cv.setPointerCapture(e.pointerId);
+    live = [pt(e)]; strokes.push(live); redraw();
+  });
+  cv.addEventListener("pointermove", (e) => {
+    if (!live) return; e.preventDefault();
+    const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+    for (const ev of evs) { const p = pt(ev); seg(ctx, live[live.length - 1], p, ink(), dpr); live.push(p); }
+  });
+  // iPad Safari: stop the Pencil/finger from scrolling, selecting text or opening the magnifier
+  for (const t of ["touchstart", "touchmove", "touchend"]) cv.addEventListener(t, (e) => e.preventDefault(), { passive: false });
+  const end = (e) => { if (e.type === "pointercancel") diag.cancels++; live = null; };
+  cv.addEventListener("pointerup", end); cv.addEventListener("pointercancel", end);
+  new ResizeObserver(size).observe(cv);
+  return {
+    reset() { strokes = []; live = null; size(); },
+    undo() { strokes.pop(); redraw(); },
+    empty: () => strokes.length === 0,
+    blob() { // tight crop, black on white, for reading
+      const xs = strokes.flat().map((p) => p.x), ys = strokes.flat().map((p) => p.y), m = 24;
+      const x0 = Math.min(...xs) - m, y0 = Math.min(...ys) - m, w = Math.max(...xs) + m - x0, h = Math.max(...ys) + m - y0;
+      const c = document.createElement("canvas"); c.width = Math.ceil(w * 2); c.height = Math.ceil(h * 2);
+      const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height);
+      paint(x, strokes, "#000", 2, x0, y0);
+      return new Promise((res) => c.toBlob(res, "image/png"));
+    },
+  };
+})();
+$("#undo").onclick = () => pad.undo();
+$("#clear").onclick = () => pad.reset();
+
+/* ---------- checking ---------- */
+function align(a, b) { // edit-distance alignment of target a vs written b
+  const n = a.length, m = b.length, d = Array.from({ length: n + 1 }, (_, i) => Array.from({ length: m + 1 }, (_, j) => (i ? (j ? 0 : i) : j)));
+  for (let i = 1; i <= n; i++) for (let j = 1; j <= m; j++)
+    d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  const ops = []; let i = n, j = m;
+  while (i || j) {
+    if (i && j && d[i][j] === d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)) { ops.unshift({ k: a[i - 1] === b[j - 1] ? "ok" : "sub", a: a[i - 1], b: b[j - 1] }); i--; j--; }
+    else if (i && d[i][j] === d[i - 1][j] + 1) { ops.unshift({ k: "miss", a: a[i - 1] }); i--; }
+    else { ops.unshift({ k: "extra", b: b[j - 1] }); j--; }
+  }
+  return ops;
+}
+
+let verdict = null, readText = "", ctl = null;
+
+function showVerdict(ok, how) {
+  verdict = ok;
+  $("#verdict").className = "verdict " + (ok ? "ok" : "no");
+  $("#verdict").textContent = ok ? (firstTry[cur.word] === "peeked" ? "Right! (you peeked, so no star this time)" : "From memory. Brilliant!") : "So close! Look at the red letters.";
+  $("#selfRow").hidden = true; $("#next").hidden = false;
+  $("#override").hidden = how !== "claude";
+  if (ok && firstTry[cur.word] !== "peeked") say("Well done!", "en-GB", 0.9);
+}
+
+function renderDiff(got) {
+  const box = $("#diff"); box.replaceChildren();
+  if (got == null) { box.append(wordHtml(cur, true)); return; }
+  for (const op of align(cur.word, got)) {
+    const s = document.createElement("span");
+    if (op.k === "ok") { s.className = "g"; s.textContent = op.a; }
+    else if (op.k === "sub") { s.className = "r"; s.textContent = op.a; }
+    else if (op.k === "miss") { s.className = "m"; s.textContent = op.a; }
+    else continue;
+    box.append(s);
+  }
+}
+
+let checkId = 0;
+$("#check").onclick = async () => {
+  if (pad.empty()) { $("#pad").animate([{ transform: "translateX(0)" }, { transform: "translateX(-8px)" }, { transform: "translateX(8px)" }, { transform: "translateX(0)" }], 300); return; }
+  setStep("check"); $("#curtain").classList.remove("down");
+  $("#checkUi").hidden = false; $("#next").hidden = true; $("#override").hidden = true;
+  $("#writeUi").querySelector(".row").hidden = true;
+  verdict = null; readText = "";
+  // Self-check is always on screen at once, so Rana is never stuck waiting for Claude.
+  selfCheck();
+  if (!sample) return;
+  const id = ++checkId;
+  $("#read").textContent = "Claude is reading your writing… (or check it yourself)";
+  try { ctl?.abort(); } catch {}
+  ctl = new AbortController();
+  try {
+    const img = await pad.blob();
+    const r = await sample.json(
+      "The image shows ONE English word handwritten by a 7-year-old on a tablet. " +
+      "Transcribe exactly the letters the child wrote, in order, in lowercase, even if the word is misspelled or is not a real word. " +
+      "NEVER correct the spelling and never guess an intended word. If a letter is unclear, choose the letter its shape looks most like. " +
+      'Reply with only JSON like {"letters":"favorit"}.',
+      { images: [img], modelTier: "quick", signal: ctl.signal, cache: false });
+    if (id !== checkId || verdict !== null) return; // she already answered herself
+    readText = String(r?.letters ?? "").toLowerCase().replace(/[^a-z]/g, "");
+    if (!readText) { $("#read").textContent = ""; return; }
+    renderDiff(readText);
+    $("#read").innerHTML = "Claude read: <b></b>"; $("#read b").textContent = readText;
+    showVerdict(readText === cur.word, "claude");
+  } catch (e) {
+    if (["not_granted", "sampling_disabled", "images_unavailable", "not_declared"].includes(e?.code)) { sample = null; renderAiNote(); }
+    diag.claude = "error: " + (e?.code || e?.message || e);
+    if (id === checkId && verdict === null) $("#read").textContent = "";
+  }
+};
+
+function selfCheck() {
+  $("#verdict").className = "verdict"; $("#verdict").textContent = "Compare your word with this one, letter by letter:";
+  renderDiff(null); $("#read").textContent = "";
+  $("#selfRow").hidden = false;
+}
+const stopReading = () => { checkId++; try { ctl?.abort(); } catch {} $("#read").textContent = ""; };
+$("#selfOk").onclick = () => { stopReading(); showVerdict(true, "self"); };
+$("#selfNo").onclick = () => { stopReading(); readText = "?"; showVerdict(false, "self"); renderDiff(null); };
+$("#override").onclick = () => { showVerdict(!verdict, "claude"); if (verdict) renderDiff(cur.word); };
+
+$("#next").onclick = () => {
+  const w = cur.word, p = prog(w), clean = verdict && firstTry[w] !== "peeked" && !retries[w];
+  p.tries++; if (verdict) p.ok++; else if (readText && readText !== "?") p.lastWrong = readText;
+  if (clean && !p.days.includes(today())) p.days.push(today());
+  if (!verdict) {
+    if (p.days.length) p.days.pop(); // a miss costs a dot, so the word comes back
+    retries[w] = (retries[w] || 0) + 1;
+    if (retries[w] <= 2) queue.splice(Math.min(2, queue.length), 0, w); // see it again soon
+  }
+  results.push({ word: w, ok: !!verdict });
+  delete firstTry[w];
+  saveAll();
+  $("#writeUi").querySelector(".row").hidden = false;
+  cur = null; nextWord();
+};
+
+function finish() {
+  cur = null; renderProgress();
+  const firstOk = new Set(results.filter((r) => r.ok && !retries[r.word]).map((r) => r.word)).size;
+  const total = new Set(results.map((r) => r.word)).size;
+  $("#doneTitle").textContent = firstOk === total ? "Every word from memory!" : "Practice done!";
+  $("#doneText").textContent = `${firstOk} of ${total} words right on the first try today. Words with three dots are yours for good.`;
+  renderShelf("#doneShelf"); show("done");
+}
+$("#again").onclick = renderHome;
+$("#quit").onclick = () => { try { ctl?.abort(); } catch {} cur = null; $("#writeUi").querySelector(".row").hidden = false; renderHome(); };
+$("#start").onclick = startRound;
+
+/* ---------- parent panel ---------- */
+function renderStats() {
+  $("#stats").innerHTML = "";
+  for (const w of words) {
+    const p = prog(w.word), tr = document.createElement("tr");
+    tr.innerHTML = `<td class="w"></td><td>${level(w.word)}/3</td><td>${p.tries}</td><td>${p.ok}</td><td class="bad"></td>`;
+    tr.children[0].textContent = w.word; tr.children[4].textContent = p.lastWrong || "–";
+    $("#stats").append(tr);
+  }
+}
+function openParent() {
+  $("#wordsTa").value = words.map((w) => w.word).join("\n");
+  $("#testDay").value = String(settings.testDay); $("#trVoice").checked = !!settings.trVoice;
+  $("#pStatus").textContent = ""; $("#resetConfirm").hidden = true;
+  renderStats(); renderAiNote(); renderDiag(); show("parent");
+  sample?.limits?.().then((l) => { $("#photoLbl").hidden = !l?.images; }).catch(() => { $("#photoLbl").hidden = true; });
+  if (!sample) $("#photoLbl").hidden = true;
+}
+$("#toParent").onclick = openParent;
+$("#closeParent").onclick = renderHome;
+$("#testDay").onchange = (e) => { settings.testDay = +e.target.value; saveAll(); };
+$("#trVoice").onchange = (e) => { settings.trVoice = e.target.checked; saveAll(); };
+$("#reset").onclick = () => { $("#resetConfirm").hidden = false; };
+$("#resetNo").onclick = () => { $("#resetConfirm").hidden = true; };
+$("#resetYes").onclick = () => { progress = {}; saveAll(); renderStats(); $("#resetConfirm").hidden = true; $("#pStatus").textContent = "İlerleme sıfırlandı."; };
+
+$("#photo").onchange = async (e) => {
+  const f = e.target.files?.[0]; if (!f || !sample) return;
+  $("#pStatus").textContent = "Fotoğraf okunuyor…";
+  try {
+    const list = await sample.json(
+      "This is a photo of a primary-school spelling worksheet. List the PRINTED spelling words the child must learn " +
+      "(typically in a table or list). Ignore handwritten copies, headings, names, dates and instructions. " +
+      'Keep the spelling exactly as printed (British spelling). Reply with only a JSON array of lowercase strings, e.g. ["bike","are"].',
+      { images: [f], modelTier: "default" });
+    const clean = (Array.isArray(list) ? list : []).map((s) => String(s).trim().toLowerCase()).filter((s) => /^[a-z' -]+$/.test(s));
+    if (!clean.length) throw new Error();
+    $("#wordsTa").value = clean.join("\n");
+    $("#pStatus").textContent = `${clean.length} kelime bulundu. Kontrol edip Kaydet'e basın.`;
+  } catch { $("#pStatus").textContent = "Fotoğraftan kelime çıkaramadım. Kelimeleri elle yazabilirsiniz."; }
+  e.target.value = "";
+};
+
+$("#saveWords").onclick = async () => {
+  const list = [...new Set($("#wordsTa").value.split(/\n|,/).map((s) => s.trim().toLowerCase()).filter(Boolean))];
+  if (!list.length) { $("#pStatus").textContent = "En az bir kelime yazın."; return; }
+  const known = Object.fromEntries([...DEFAULTS, ...words].map((w) => [w.word, w]));
+  const missing = list.filter((w) => !known[w]);
+  words = list.map((w) => known[w] || { word: w, mark: w, fx: "", tr: "", hint: "" });
+  saveAll(); renderStats();
+  if (!missing.length) { $("#pStatus").textContent = "Kaydedildi."; return; }
+  if (!sample) { $("#pStatus").textContent = "Kaydedildi. Claude bağlı olmadığı için yeni kelimelerde ipucu yok."; return; }
+  $("#pStatus").textContent = `Kaydedildi. ${missing.length} yeni kelime için ipuçları hazırlanıyor…`;
+  try {
+    const tips = await sample.json(
+      "You help a 7-year-old (UK Year 2, bilingual Turkish-English) learn spellings. For each word below return an object:\n" +
+      '- "word": the word\n' +
+      '- "mark": the word with the hard-to-spell part wrapped in [ ] and any silent letter wrapped in { }. Removing the brackets must give the exact word. Mark only 1-2 parts; plain phonetic words get no brackets.\n' +
+      '- "hint": one short, playful English sentence (max 14 words) that makes the tricky part memorable for a 7-year-old.\n' +
+      '- "tr": how the word would sound if every letter were read in Turkish, split into syllables with hyphens (e.g. favourite -> "fa-vo-u-ri-te").\n' +
+      "Reply with only a JSON array of these objects.\n\nWords: " + missing.join(", "),
+      { modelTier: "default" });
+    for (const t of Array.isArray(tips) ? tips : []) {
+      const w = words.find((x) => x.word === String(t.word).toLowerCase()); if (!w) continue;
+      const mark = String(t.mark || w.word);
+      w.mark = mark.replace(/[\[\]{}|]/g, "") === w.word ? mark : w.word;
+      w.hint = String(t.hint || "").slice(0, 160); w.tr = String(t.tr || "").slice(0, 40);
+    }
+    saveAll(); $("#pStatus").textContent = "Kaydedildi, ipuçları hazır.";
+  } catch { $("#pStatus").textContent = "Kaydedildi, ama ipuçları hazırlanamadı. Kelimeler ipucusuz çalışır."; }
+};
+
+/* ---------- full screen (shown only where the browser allows it) ---------- */
+(() => {
+  const el = document.documentElement, d = document;
+  const standalone = navigator.standalone || (window.matchMedia && matchMedia("(display-mode: standalone)").matches);
+  const can = !standalone && (d.fullscreenEnabled || d.webkitFullscreenEnabled);
+  const isOn = () => !!(d.fullscreenElement || d.webkitFullscreenElement);
+  const btn = $("#fs");
+  if (!can) return;
+  btn.hidden = false;
+  const sync = () => { btn.textContent = isOn() ? "Exit full screen" : "Full screen"; };
+  btn.onclick = async () => {
+    try {
+      if (isOn()) await (d.exitFullscreen || d.webkitExitFullscreen).call(d);
+      else await (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+    } catch { btn.hidden = true; }
+  };
+  d.addEventListener("fullscreenchange", sync); d.addEventListener("webkitfullscreenchange", sync);
+})();
+
+renderHome();
+</script>
+
+</body>
+</html>
